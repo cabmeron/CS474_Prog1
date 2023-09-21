@@ -63,15 +63,19 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Check frequency count
-
-    vector<int> newPixel;
-    newPixel.push_back(0);
+    // Calculate and store intensity probabilities
 
     for (i = 0; i < Q; i++)
     {
         intensityProbability[i] = intensityFrequencies[i] / totalPixelCount;
     }
+
+    // Vector to grow as we iterate through intensity values for summation
+
+    vector<int> newPixel;
+    newPixel.push_back(0);
+
+    // Summation for new equalized pixel values
 
     for (int j = 0; j < Q; j++)
     {
@@ -95,6 +99,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Map original pixel values to new equalized values
+
     for (i = 0; i < N; i++)
     {
         for (j = 0; j < M; j++)
@@ -105,6 +111,8 @@ int main(int argc, char *argv[])
             originalImage.setPixelVal(i, j, equalizedPixelVal);
         }
     }
+
+    // Write new values over original image memory allocation
 
     writeImage(argv[2], originalImage);
 

@@ -19,26 +19,36 @@ int main(int argc, char *argv[])
     int val;
     int subSampleFactor;
 
-    int subRow, subCol = 0;
+    int subI, subJ = 0;
 
-    int row, col, Q2;
+    int N2, M2, Q2;
 
-    // read image header
+    // read original image header
+
     readImageHeader(argv[1], N, M, Q, type);
 
-    // allocate memory for the image array
+    // allocate memory for the original image array
 
-    ImageType image(N, M, Q);
+    ImageType originalImage(N, M, Q);
 
-    // read image
-    readImage(argv[1], image);
+    // read original image
+
+    readImage(argv[1], originalImage);
+
+    // get sub sample factors from user
 
     cout << "Enter Sub Sampling Factor: ";
     cin >> subSampleFactor;
 
+    // allocate memory for sub sample image array
+
     ImageType subSampleImage(floor(N / subSampleFactor), floor(M / subSampleFactor), Q);
 
-    subSampleImage.getImageInfo(row, col, Q2);
+    // read sub sample image header
+
+    subSampleImage.getImageInfo(N2, M2, Q2);
+
+    // Fill sub sample image pixel values
 
     for (i = 0; i < N; i += subSampleFactor)
     {
@@ -46,76 +56,60 @@ int main(int argc, char *argv[])
         for (j = 0; j < M; j += subSampleFactor)
         {
 
-            image.getPixelVal(i, j, val);
-
-            subSampleImage.setPixelVal(subRow, subCol, val);
-
-            // Fills in some values before sampled for new image. Need to run this loop after doing sub Sample operation then write to file
-
-            // for (k = j; k < k + subSampleFactor && k < floor(row / subSampleFactor) - subSampleFactor; k++)
-            // {
-            //     image.setPixelVal(i, k, val);
-            // }
-
-            subCol += 1;
+            originalImage.getPixelVal(i, j, val);
+            subSampleImage.setPixelVal(subI, subJ, val);
+            subJ += 1;
         }
-        subCol = 0;
-        subRow += 1;
+        subJ = 0;
+        subI += 1;
     }
 
-    int l, m = 0;
+    // allocate memory for resized image from original image header values
 
-    for (i = 0; i < N; i += subSampleFactor)
+    ImageType resizedImage(N, M, Q);
+
+    // Resize sub sample into original image memory
+
+    int colIterations = 0;
+    int rowIterations = 0;
+    subI = 0;
+    subJ = 0;
+
+    for (i = 0; i < N; i += 1)
     {
 
-        for (j = 0; j < M; j += subSampleFactor)
+        for (j = 0; j < M; j += 1)
         {
-            subSampleImage.getImageInfo(l, m, val);
-            for (k = j; k < k + subSampleFactor && k < floor(row / subSampleFactor) - subSampleFactor; k++)
+            if (colIterations > subSampleFactor - 1)
             {
-                image.setPixelVal(i, k, val);
+                subJ += 1;
+                colIterations = 0;
             }
-        }
-        l += 1;
-        m += 1;
-    }
 
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 4; j++)
+            subSampleImage.getPixelVal(subI, subJ, val);
+
+            resizedImage.setPixelVal(i, j, val);
+            colIterations++;
+        }
+        if (rowIterations > subSampleFactor - 1)
         {
-            image.getPixelVal(i, j, val);
-            cout << "Val @ [" << i << "][" << j << "]: " << val << endl;
+            subI += 1;
+            rowIterations = 0;
         }
+
+        colIterations = 0;
+        rowIterations++;
+        subJ = 0;
     }
 
-    cout << "Sub Sampled Image Values: " << endl;
+    writeImage(argv[2], subSampleImage);
+    writeImage(argv[3], resizedImage);
 
-    for (i = 0; i < 2; i++)
-    {
-        for (j = 0; j < 2; j++)
-        {
-            subSampleImage.getPixelVal(i, j, val);
-            cout << "Val @ [" << i << "][" << j << "]: " << val << endl;
-        }
-    }
-
-    // writeImage(argv[2], subSampleImage);
-
-    // threshold image
-
-    // for (i = 0; i < N; i++ )
-    //     for (j = 0; j < M; j++)
-    //     {
-    //         image.getPixelVal(i, j, val);
-    //         if (val < thresh)
-    //             image.setPixelVal(i, j, 255);
-    //         else
-    //             image.setPixelVal(i, j, 0);
-    //     }
-
-    // write image
-    // writeImage(argv[2], image);
+    std::cout << "Image Sub Sampling of size: " << subSampleFactor << " performed" << std::endl;
+    std::cout << "Sub sampled image of size: "
+              << "[" << N2 << "]"
+              << " by "
+              << "[" << M2 << "]" << std::endl;
 
     return (1);
 }
